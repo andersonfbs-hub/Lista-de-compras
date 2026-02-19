@@ -1,0 +1,23 @@
+LICENÇA PROPRIETÁRIA - CONFIDENCIAL
+
+Copyright (c) 2026 ANDERSON FEITOSA DE BARROS E SILVA. Todos os direitos reservados.
+
+Este software e seu código-fonte são propriedade exclusiva de ANDERSON FEITOSA DE BARROS E SILVA.
+
+PROIBIÇÕES:
+- Você NÃO pode copiar, modificar, distribuir ou republicar este código.
+- Você NÃO pode criar versões derivadas ou cópias do aplicativo.
+- Você NÃO pode usar este código para fins comerciais sem autorização explícita.
+- Você NÃO pode reverter a engenharia, desmontar ou tentar acessar o código-fonte.
+
+PERMISSÕES:
+- Você pode USAR o aplicativo conforme oferecido.
+- Você pode relatar bugs para que o proprietário corrija.
+
+LIMITAÇÕES DE RESPONSABILIDADE:
+Este software é fornecido "COMO ESTÁ", sem garantias de qualquer tipo.
+O proprietário não é responsável por danos diretos ou indiretos.
+
+Para solicitar permissão especial, contacte: andersonfbs@gmail.com
+
+Versão 1.0 - Fevereiro de 2026

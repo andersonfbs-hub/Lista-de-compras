@@ -1,0 +1,1750 @@
+<!-- Parte 1: HTML e CSS -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Compras de Supermercado</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e1e1e">
+  <link rel="icon" href="icons/icon-192.svg">
+  <style>
+
+    body {
+      font-family: Calibri;
+      margin: 0px;      
+      color: black;
+      transition: all 0.3s ease;
+    }
+    
+    body.dark {
+      background-color: #000000;
+      color: #66aaff;
+    }
+
+    #espaço {
+      height: 135px;
+      color: #000000;
+    }
+    
+    #cabecalhoFixo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 10px 0px;
+      width: 95%;
+      margin-left: 2.5%;
+      margin-top: 10px;
+      border-radius: 5px;
+      background-color: #1e1e1e;
+      color: aqua;      
+      display: flex;      
+      z-index: 1000;
+      box-shadow: 0 5px 15px rgba(29, 195, 195, 0.3);      
+    }   
+
+    #tituloPrincipal {
+      text-align: left;
+      font-size: 2em;
+      line-height:150%;
+      padding: 0px 0px 0px 10px;
+      margin: 0px 0px 0px 0px;
+      user-select: none;   
+      width: 60%;
+      flex-grow: 1;
+    }
+
+    .controls {
+      width: 40%;
+      
+    }
+
+    .controls button {
+      margin: 5px 0px 5px 5px;
+      padding: 10px 10px;
+      cursor: pointer;
+      border: 1px solid #555;
+      background-color: #333;      
+      border-radius: 4px;
+    }     
+
+    .controls button:hover {
+      background-color: #555;
+      border-color: #66aaff;
+      color: aqua;
+    }
+    
+    .categoria-bloco {
+      margin: 4px 10px;
+    }
+   
+    .categoria-titulo {
+      height: 20px;
+      padding: 10px; 
+      font-size: 1.2em;
+      background-color: #1e1e1e;
+      border-radius: 5px;      
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;      
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      max-width: 136px;
+      padding: 4px;
+      
+      box-sizing: border-box;
+    }
+
+    .total {
+      position: fixed;
+      bottom: 20px; /* ou top: 20px, se quiser no topo */
+      right: 20px;  /* ou left: 20px, conforme sua preferência */
+      font-weight: bold;
+      font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #1e1e1e; /* combina com o tema dark */
+      color: aqua;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 5px 10px rgba(29, 195, 195, 0.3);
+      z-index: 1000; /* garante que fique acima de outros elementos */
+    }
+
+    /* Evita quebra de linha quando uma checkbox é inserida dentro do total */
+    .total {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .tabela-wrapper {
+      overflow: hidden;
+      transition: height 10s ease;
+      height: auto;
+    }
+
+    .tabela-wrapper.colapsado {
+      max-height: 0;
+    }
+    
+    .item-linha {
+      display: flex;
+      align-items: center;    
+      width: 97%;
+      margin-left: 11px;     
+    }
+
+    .item-linha input[type="number"],
+    .item-linha input[type="text"] {
+      flex: 1;
+      min-width: 80px;
+      max-width: 120px;
+    }
+
+    /* Mantém altura da linha do item no modo edição */
+    body.modo-edicao .item-linha {
+      min-height: 40.5px;
+    }
+
+    /* Nome do item */
+    .item-nome {     
+      text-align: left;      
+      font-style: italic;
+      margin-left: 15px;
+    }
+
+    /* Inputs agrupados */
+    .item-centro {
+      display: flex;      
+      justify-content:right;
+      flex: 0 0 0;
+      min-width: 120px;
+    }
+
+    /* Esconde os inputs de quantidade e valor unitário no modo edição */
+    body.modo-edicao .item-centro {
+      display: none;
+    }
+
+    /* Inputs individuais */
+    .item-centro input {
+      margin-right: 3px;
+      padding: 6px;
+      font-size: 16px;
+      text-align: center;      
+      color:aqua;
+      background: none;
+      border: none;
+    }
+    
+    body.dark .item-linha {
+      border-color: #555;
+    }    
+    
+    /* Oculta os campos de string por padrão */
+    #item,
+    #novaCategoria {
+      display: none;
+    }
+
+    /* Exibe os campos de string no modo de edição */
+    body.modo-edicao #item,
+    body.modo-edicao #novaCategoria {
+      display: inline-block;
+    }
+
+    #form {
+      position: fixed;
+      left:60.5%;
+      padding: 10px 6px;
+      width: 140px;
+      min-height: 100px;     
+    }
+
+    body:not(.modo-edicao) #form {
+      display: none;
+    }       
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.9s ease forwards;
+    }
+
+    .toggleCategoria {
+      background-color: #f0f0f0;
+      color: #333;
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark .toggleCategoria {
+      background-color: #1e1e1e;
+      color: #66aaff;
+      border: none;
+    }
+
+    body.modo-compacto .item-nome {
+      flex: 1;
+      font-size: 16px;
+      padding: 6px 0;
+      text-align: left;
+    }
+
+    body.modo-compacto .item-linha {
+      padding: 4px 0;
+      border-bottom: 1px solid #ccc;
+    }  
+
+    /* Responsivo para telas até 400px */    
+    @media (max-width: 400px) {
+      .item-linha {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .item-centro {
+        justify-content: space-around;
+      }      
+    }
+    /* Export modal styles */
+    .export-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+    .export-modal {
+      background: #1e1e1e;
+      color: aqua;
+      padding: 18px;
+      border-radius: 8px;
+      width: 320px;
+      max-width: calc(100% - 32px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      text-align: center;
+      font-family: inherit;
+    }
+    .export-modal .export-modal-title {
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .export-modal .export-modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .export-modal button {
+      background: #333;
+      color: aqua;
+      border: 1px solid #555;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      min-width: 90px;
+    }
+    .export-modal button:hover { background:#555; border-color:#66aaff; }
+        
+  </style>
+</head>
+<body>
+  <!-- Export modal removed; CSV-only behavior is applied to submitBtn -->
+
+  <div id="cabecalhoFixo">
+  <h2 id="tituloPrincipal">Compras de Supermercado</h2>
+    
+    <div class="controls">
+  <button id="botaoEditar" onclick="alternarModoEdicao()">⚙️</button>
+  <button id="botaoPaleta" title="Alterar cor da categoria">🎨</button>
+  <button id="botaoLimpar" onclick="limparCamposNumericos()">🔄</button>
+  <button id="botaoToggleOcultos" onclick="alternarOcultos()">👁️</button>
+  <button id="botaoRemover" onclick="removerSelecionados()">🗑️</button>
+  <button id="submitBtn">📥</button>
+    </div>    
+  </div>
+
+  <div id="espaço">espaço</div>
+  
+  <form id="form">
+    <input type="text" id="item" placeholder="Novo Item">
+    <input type="text" id="novaCategoria" placeholder="Nova Categoria">
+  </form>
+
+  <!-- Hidden file input for importing list -->
+  <input type="file" id="inputImportar" accept=".json" style="display:none;" onchange="importarLista(event)">
+
+  <div id="categoriasContainer"></div>
+
+  <div class="total">Total: R$ <span id="valorTotal">0.00</span></div>
+<!-- Parte 1: HTML e CSS -->
+ <script>
+  // Função para tornar o <h2> editável ao tocar e segurar em modo de edição e salvar no localStorage
+  document.addEventListener('DOMContentLoaded', function() {
+    // Botão de paleta para alterar cor da categoria selecionada
+    const botaoPaleta = document.getElementById('botaoPaleta');
+    botaoPaleta.addEventListener('click', function() {
+      if (!modoEdicao) return;
+      // Verifica se há uma categoria selecionada ou o total selecionado
+      const selecionada = document.querySelector('.catSelecionado:checked');
+      const totalSelecionada = document.querySelector('.totalSelecionado:checked');
+      const tituloSelecionada = document.querySelector('.tituloSelecionado:checked');
+      if (!selecionada && !totalSelecionada && !tituloSelecionada) {
+        alert('Selecione uma categoria, o total ou o título para alterar a cor.');
+        return;
+      }
+      // Cria input de cor temporário e dispara o color picker nativo
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.style.display = 'none';
+
+      // Prioridade: título selecionado > total selecionado > categoria selecionada
+      if (tituloSelecionada) {
+        const tituloEl = document.getElementById('tituloPrincipal');
+        const current = tituloEl ? rgbToHex(tituloEl.style.color) : '#66aaff';
+        colorInput.value = current || '#66aaff';
+        colorInput.addEventListener('input', function() {
+          if (tituloEl) {
+            tituloEl.style.color = colorInput.value;
+            localStorage.setItem('tituloCor', colorInput.value);
+          }
+        });
+      } else if (totalSelecionada) {
+        const totalEl = document.querySelector('.total');
+        const current = totalEl ? rgbToHex(totalEl.style.color) : '#66aaff';
+        colorInput.value = current || '#66aaff';
+        colorInput.addEventListener('input', function() {
+          if (totalEl) {
+            totalEl.style.color = colorInput.value;
+            localStorage.setItem('totalCor', colorInput.value);
+          }
+        });
+      } else {
+        const nomeCat = selecionada.dataset.categoria;
+        const catObj = categorias.find(c => c.nome === nomeCat);
+        colorInput.value = catObj && catObj.cor ? rgbToHex(catObj.cor) : '#66aaff';
+        colorInput.addEventListener('input', function() {
+          if (catObj) {
+            catObj.cor = colorInput.value;
+            salvarDados();
+            atualizarInterface();
+          }
+        });
+      }
+
+      colorInput.addEventListener('blur', function() {
+        colorInput.remove();
+      });
+      document.body.appendChild(colorInput);
+      colorInput.click();
+    });
+
+    // Função para converter rgb para hex
+    function rgbToHex(rgb) {
+      if (!rgb) return '#66aaff';
+      if (rgb.startsWith('#')) return rgb;
+      const result = rgb.match(/\d+/g);
+      if (!result || result.length < 3) return '#66aaff';
+      return '#' + result.slice(0,3).map(x => (+x).toString(16).padStart(2,'0')).join('');
+    }
+    const tituloPrincipal = document.getElementById('tituloPrincipal');
+    let holdTimer = null;
+    // Restaurar título salvo
+    const tituloSalvo = localStorage.getItem('comprasTitulo');
+    if (tituloSalvo && tituloPrincipal) {
+      tituloPrincipal.textContent = tituloSalvo;
+    }
+    // Restaurar cor do total, se salva
+    try {
+      const totalEl = document.querySelector('.total');
+      const totalCor = localStorage.getItem('totalCor');
+      if (totalEl && totalCor) {
+        totalEl.style.color = totalCor;
+      }
+      // Restaurar cor do título principal, se salva
+      const tituloCor = localStorage.getItem('tituloCor');
+      if (tituloPrincipal && tituloCor) {
+        tituloPrincipal.style.color = tituloCor;
+      }
+    } catch (e) { /* ignore */ }
+    if (tituloPrincipal) {
+      tituloPrincipal.addEventListener('touchstart', function(e) {
+        if (!modoEdicao) return;
+        if (e.touches.length > 1) return;
+        if (e.target && e.target.closest && e.target.closest('.tituloSelecionado')) return;
+        e.preventDefault();
+        holdTimer = setTimeout(() => {
+          // Cria um input sobreposto ao h2, sem alterar o fluxo do layout
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.classList.add('no-submit');
+          input.value = tituloPrincipal.textContent;
+          input.style.color = 'aqua';
+          input.style.fontSize = '2em';
+          input.style.width = '55%';
+          input.style.maxWidth = 'none';
+          input.style.height = `88px`;
+          input.style.position = 'absolute';
+          input.style.left = '15px';
+          input.style.top = `15px`;
+          input.style.padding = '0px 16px 0px 0px';
+          input.style.boxSizing = 'border-box';
+          input.style.textAlign = 'center';
+          input.style.border = '1px solid #ccc';
+          input.style.borderRadius = '4px';
+          input.style.background = 'inherit';
+          input.style.zIndex = '2000';
+          input.style.margin = '0px 0px 0px 0px';
+          // Adiciona o input ao mesmo container do h2
+          tituloPrincipal.parentNode.appendChild(input);
+          tituloPrincipal.style.visibility = 'hidden';
+          setTimeout(() => input.focus(), 10);
+          function saveEdit() {
+            const novoTitulo = input.value.trim();
+            tituloPrincipal.style.visibility = '';
+            input.remove();
+            if (novoTitulo && novoTitulo !== tituloPrincipal.textContent) {
+              tituloPrincipal.textContent = novoTitulo;
+              localStorage.setItem('comprasTitulo', novoTitulo);
+            }
+          }
+          input.addEventListener('blur', saveEdit);
+          input.addEventListener('keydown', function(ev) {
+            if (ev.key === 'Enter') {
+              input.blur();
+            }
+          });
+        }, 400);
+      });
+      tituloPrincipal.addEventListener('touchend', function(e) {
+        if (holdTimer) clearTimeout(holdTimer);
+      });
+      tituloPrincipal.addEventListener('touchcancel', function(e) {
+        if (holdTimer) clearTimeout(holdTimer);
+      });
+    }
+  });
+  const form = document.getElementById('form');
+  const novaCategoriaInput = document.getElementById('novaCategoria');
+  const categoriasContainer = document.getElementById('categoriasContainer');
+  const valorTotalSpan = document.getElementById('valorTotal');
+
+  let itens = [];
+  let categorias = [];
+  let modoEdicao = false;
+  // Token para garantir que o fade-in das checkboxes ocorra apenas uma vez por entrada em modo edição
+  let fadeToken = null;
+
+  let ocultarSemQuantidade = false;
+
+  // Paleta de cores pasteis
+  const pastelColors = [
+    '#A3E4D7', // verde água pastel
+    '#F9E79F', // amarelo pastel
+    '#F5CBA7', // laranja pastel
+    '#D7BDE2', // lilás pastel
+    '#AED6F1'  // azul pastel
+  ];
+
+  function getNextPastelColor() {
+    // Pega as cores já usadas
+    const usedColors = categorias.map(c => c.cor).filter(Boolean);
+    // Encontra a primeira cor não usada
+    for (let color of pastelColors) {
+      if (!usedColors.includes(color)) return color;
+    }
+    // Se todas usadas, retorna uma cor aleatória da paleta
+    return pastelColors[Math.floor(Math.random() * pastelColors.length)];
+  }
+
+  function salvarDados() {
+    localStorage.setItem('comprasItens', JSON.stringify(itens));
+    localStorage.setItem('comprasCategorias', JSON.stringify(categorias));
+    localStorage.setItem('ocultarSemQuantidade', JSON.stringify(ocultarSemQuantidade));
+  }
+
+  function carregarDados() {
+    const itensSalvos = localStorage.getItem('comprasItens');
+    const categoriasSalvas = localStorage.getItem('comprasCategorias');
+    if (itensSalvos) itens = JSON.parse(itensSalvos);
+    if (categoriasSalvas) categorias = JSON.parse(categoriasSalvas);
+    const estadoSalvo = localStorage.getItem('ocultarSemQuantidade');
+    ocultarSemQuantidade = estadoSalvo ? JSON.parse(estadoSalvo) : false;
+    atualizarInterface();
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const nome = document.getElementById('item').value.trim();
+    const novaCategoria = novaCategoriaInput.value.trim();
+
+    // ✅ Caso 1: Criar nova categoria sem item
+    if (!nome && novaCategoria) {
+      if (!categorias.find(c => c.nome === novaCategoria)) {
+        categorias.push({ nome: novaCategoria, oculto: false, colapsado: false, cor: getNextPastelColor() });
+        salvarDados();
+        form.reset();
+        atualizarInterface();
+      } else {
+        alert(`A categoria "${novaCategoria}" já existe.`);
+      }
+      return;
+    }
+
+    // ✅ Caso 2: Adicionar item
+    if (!nome) {
+      alert('Preencha o nome do item.');
+      return;
+    }
+
+    let categoria = '';
+
+    if (modoEdicao) {
+      const categoriasSelecionadas = document.querySelectorAll('.catSelecionado:checked');
+
+      if (categoriasSelecionadas.length === 0) {
+        alert('Selecione uma categoria para adicionar o item.');
+        return;
+      }
+
+      if (categoriasSelecionadas.length > 1) {
+        alert('Selecione apenas uma categoria.');
+        return;
+      }
+
+      categoria = categoriasSelecionadas[0].dataset.categoria;
+    } else {
+      categoria = novaCategoria || 'Sem Categoria';
+
+      if (!categorias.find(c => c.nome === categoria)) {
+        categorias.push({ nome: categoria, oculto: false, colapsado: false, cor: getNextPastelColor() });
+      }
+    }
+
+    // 🔍 Verifica duplicidade
+    const itemDuplicado = itens.some(item =>
+      item.categoria === categoria && item.nome.toLowerCase() === nome.toLowerCase()
+    );
+
+    if (itemDuplicado) {
+      alert(`"${nome}" já existe na lista`);
+      return;
+    }
+
+    // ✅ Adiciona o item
+    itens.push({ nome, categoria, qtd: 0, valor: 0, oculto: false });
+
+    salvarDados();
+    form.reset();
+
+    const categoriasSelecionadasAntes = Array.from(document.querySelectorAll('.catSelecionado:checked'))
+      .map(input => input.dataset.categoria);
+
+    atualizarInterface();
+
+    categoriasSelecionadasAntes.forEach(nome => {
+      const checkbox = document.querySelector(`.catSelecionado[data-categoria="${nome}"]`);
+      if (checkbox) checkbox.checked = true;
+    });    
+  });
+
+  function atualizarInterface() {
+    categoriasContainer.innerHTML = '';
+    
+    categorias.forEach(cat => {
+      if (cat.oculto) return;
+
+      const bloco = document.createElement('div');
+      bloco.className = 'categoria-bloco';
+
+      const titulo = document.createElement('div');
+      titulo.className = 'categoria-titulo';
+      
+      // Criar checkbox seguramente (sem innerHTML)
+      if (modoEdicao) {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'catSelecionado';
+        checkbox.dataset.categoria = cat.nome;
+        titulo.appendChild(checkbox);
+      }
+      
+      // Criar span para nome da categoria (usar textContent para segurança)
+      const catNomeSpan = document.createElement('span');
+      catNomeSpan.className = 'cat-nome';
+      catNomeSpan.dataset.categoria = cat.nome;
+      catNomeSpan.style.cursor = 'pointer';
+      catNomeSpan.style.userSelect = 'none';
+      catNomeSpan.style.fontWeight = 'bold';
+      catNomeSpan.textContent = cat.nome;  // ✅ SEGURO: textContent, não innerHTML
+      titulo.appendChild(catNomeSpan);
+      
+      bloco.appendChild(titulo);
+      
+      // Se modo edição, adiciona evento para desmarcar itens da categoria ao selecionar a categoria
+      if (modoEdicao) {
+        const catCheckbox = titulo.querySelector('.catSelecionado');
+        if (catCheckbox) {
+          catCheckbox.addEventListener('change', function(e) {
+            if (catCheckbox.checked) {
+              // Desmarca todos os itens dessa categoria
+              const itemCheckboxes = categoriasContainer.querySelectorAll(`.itemSelecionado`);
+              itemCheckboxes.forEach(cb => {
+                const idx = cb.getAttribute('data-index');
+                if (itens[idx] && itens[idx].categoria === cat.nome) {
+                  cb.checked = false;
+                }
+              });
+            }
+          });
+        }
+      }
+      
+        // Adiciona eventos no nome da categoria
+        const catNomeEl = titulo.querySelector('.cat-nome');
+        if (catNomeEl) {
+          let holdTimer = null;
+          let touchMoved = false;
+          if (modoEdicao) {
+            // Editar nome ao tocar e segurar
+            catNomeEl.addEventListener('touchstart', function(e) {
+              if (!modoEdicao) return;
+              if (e.touches.length > 1) return;
+              touchMoved = false;
+              holdTimer = setTimeout(() => {
+                // Troca <span> por <input>
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = cat.nome;
+                input.className = 'cat-nome-edit';
+                input.style.fontSize = '1em';
+                input.style.width = (cat.nome.length + 2) + 'ch';
+                input.style.color = cat.cor || '';
+                input.style.background = 'inherit';
+                input.style.border = '1px solid #ccc';
+                input.style.borderRadius = '4px';
+                input.style.padding = '2px 6px';
+                input.style.marginLeft = '4px';
+                input.style.marginRight = '4px';
+                catNomeEl.replaceWith(input);
+                setTimeout(() => input.focus(), 10);
+                function saveEdit() {
+                  const novoNome = input.value.trim();
+                  if (novoNome && novoNome !== cat.nome) {
+                    if (categorias.some(c => c.nome === novoNome)) {
+                      alert('Já existe uma categoria com esse nome.');
+                      input.value = cat.nome;
+                      input.focus();
+                      return;
+                    }
+                    const nomeAntigo = cat.nome;
+                    cat.nome = novoNome;
+                    itens.forEach(item => {
+                      if (item.categoria === nomeAntigo) {
+                        item.categoria = novoNome;
+                      }
+                    });
+                    salvarDados();
+                    atualizarInterface();
+                  } else {
+                    atualizarInterface();
+                  }
+                }
+                input.addEventListener('blur', saveEdit);
+                input.addEventListener('keydown', function(ev) {
+                  if (ev.key === 'Enter') {
+                    input.blur();
+                  }
+                });
+              }, 400);
+            });
+            catNomeEl.addEventListener('touchmove', function() {
+              touchMoved = true;
+            });
+            catNomeEl.addEventListener('touchend', function(e) {
+              if (holdTimer) clearTimeout(holdTimer);
+              // Se não foi segurar (menos de 400ms) e não moveu, alterna colapso
+              if (!touchMoved && e.changedTouches && e.changedTouches.length === 1 && e.timeStamp - e.targetTouches[0]?.timeStamp < 400) {
+                categoriaToggleByNome(cat.nome);
+              }
+            });
+            catNomeEl.addEventListener('touchcancel', function(e) {
+              if (holdTimer) clearTimeout(holdTimer);
+            });
+            // Clique rápido também alterna colapso
+            catNomeEl.addEventListener('click', function(e) {
+              e.preventDefault();
+              categoriaToggleByNome(cat.nome);
+            });
+          } else {
+            // No modo normal, alterna colapso ao clicar/tocar no nome
+            catNomeEl.addEventListener('click', function(e) {
+              e.preventDefault();
+              categoriaToggleByNome(cat.nome);
+            });
+            catNomeEl.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) return;
+              e.preventDefault();
+              categoriaToggleByNome(cat.nome);
+            });
+          }
+        }
+    // Função auxiliar para alternar colapso/expansão por nome
+    function categoriaToggleByNome(nomeCat) {
+      const categoria = categorias.find(c => c.nome === nomeCat);
+      if (!categoria) return;
+      // Encontra o bloco e o wrapper correspondente
+      const bloco = Array.from(categoriasContainer.querySelectorAll('.categoria-bloco')).find(div => {
+        const span = div.querySelector('.cat-nome');
+        return span && span.dataset.categoria === nomeCat;
+      });
+      if (!bloco) {
+        categoria.colapsado = !categoria.colapsado;
+        salvarDados();
+        atualizarInterface();
+        return;
+      }
+      const wrapper = bloco.querySelector('.tabela-wrapper');
+      if (!wrapper) {
+        categoria.colapsado = !categoria.colapsado;
+        salvarDados();
+        atualizarInterface();
+        return;
+      }
+      if (!categoria.colapsado) {
+        // Vai colapsar
+        wrapper.style.height = `${wrapper.scrollHeight}px`;
+        // Força reflow para garantir a transição
+        void wrapper.offsetHeight;
+        wrapper.style.transition = 'height 0.4s ease';
+        wrapper.style.height = '0px';
+        categoria.colapsado = true;
+      } else {
+        // Vai expandir
+        wrapper.style.transition = 'height 0.4s ease';
+        wrapper.style.height = '0px';
+        // Força reflow
+        void wrapper.offsetHeight;
+        wrapper.style.height = `${wrapper.scrollHeight}px`;
+        categoria.colapsado = false;
+      }
+      salvarDados();
+      // Após a transição, se expandido, define height:auto
+      wrapper.addEventListener('transitionend', function handler() {
+        if (!categoria.colapsado) {
+          wrapper.style.height = 'auto';
+        }
+        wrapper.removeEventListener('transitionend', handler);
+      });
+    }
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'tabela-wrapper';
+      if (cat.colapsado) wrapper.style.height = '0px';
+
+      const itensOrdenados = itens
+        .filter(item => item.categoria === cat.nome && !item.oculto)
+        .sort((a, b) => a.nome.toLowerCase().localeCompare(b.nome.toLowerCase()));
+
+      itensOrdenados.forEach(item => {
+        const indexReal = itens.indexOf(item);
+        const linha = document.createElement('div');
+        linha.className = 'item-linha';
+        
+        // Criar checkbox seguramente
+        if (modoEdicao) {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'itemSelecionado';
+          checkbox.dataset.index = indexReal;
+          linha.appendChild(checkbox);
+        }
+        
+        // Criar div para nome do item (usar textContent para segurança)
+        const itemNomeDiv = document.createElement('div');
+        itemNomeDiv.className = 'item-nome';
+        itemNomeDiv.dataset.index = indexReal;
+        itemNomeDiv.textContent = item.nome;  // ✅ SEGURO: textContent, não innerHTML
+        if (cat.cor) itemNomeDiv.style.color = cat.cor;
+        linha.appendChild(itemNomeDiv);
+        
+        // Criar div para quantidade e valor
+        const itemCentro = document.createElement('div');
+        itemCentro.className = 'item-centro';
+        
+        const qtdInput = document.createElement('input');
+        qtdInput.type = 'number';
+        qtdInput.className = 'quantidade';
+        qtdInput.value = item.qtd || '';
+        qtdInput.min = '0';
+        qtdInput.dataset.index = indexReal;
+        if (cat.cor) qtdInput.style.color = cat.cor;
+        itemCentro.appendChild(qtdInput);
+        
+        const valorInput = document.createElement('input');
+        valorInput.type = 'number';
+        valorInput.className = 'valorUnitario';
+        valorInput.value = item.valor || '';
+        valorInput.step = '0.01';
+        valorInput.dataset.index = indexReal;
+        if (cat.cor) valorInput.style.color = cat.cor;
+        itemCentro.appendChild(valorInput);
+        
+        linha.appendChild(itemCentro);
+
+        // Adiciona evento de toque prolongado ao nome do item para edição
+        const itemNomeEl = linha.querySelector('.item-nome');
+        if (itemNomeEl) {
+          let holdTimer = null;
+          let touchMoved = false;
+          
+          itemNomeEl.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) return;
+            touchMoved = false;
+            holdTimer = setTimeout(() => {
+              // Troca <div> por <input> para editar
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = item.nome;
+              input.style.fontSize = 'inherit';
+              input.style.color = cat.cor || 'inherit';
+              input.style.background = 'inherit';
+              input.style.border = '1px solid #ccc';
+              input.style.borderRadius = '4px';
+              input.style.padding = '4px 6px';
+              input.style.marginLeft = '15px';
+              input.style.textAlign = 'left';
+              input.style.fontStyle = 'italic';
+              input.style.flex = '1';
+              input.style.minWidth = '80px';
+              itemNomeEl.replaceWith(input);
+              setTimeout(() => input.focus(), 10);
+              
+              function saveEdit() {
+                const novoNome = input.value.trim();
+                if (novoNome && novoNome !== item.nome) {
+                  // Verifica se já existe item com esse nome na mesma categoria
+                  if (itens.some(it => it.categoria === cat.nome && it.nome.toLowerCase() === novoNome.toLowerCase() && it !== item)) {
+                    alert('Já existe um item com esse nome nesta categoria.');
+                    input.value = item.nome;
+                    input.focus();
+                    return;
+                  }
+                  item.nome = novoNome;
+                  salvarDados();
+                  atualizarInterface();
+                } else {
+                  atualizarInterface();
+                }
+              }
+              
+              input.addEventListener('blur', saveEdit);
+              input.addEventListener('keydown', function(ev) {
+                if (ev.key === 'Enter') {
+                  input.blur();
+                }
+              });
+            }, 400);
+          });
+          
+          itemNomeEl.addEventListener('touchmove', function() {
+            touchMoved = true;
+          });
+          
+          itemNomeEl.addEventListener('touchend', function(e) {
+            if (holdTimer) clearTimeout(holdTimer);
+          });
+          
+          itemNomeEl.addEventListener('touchcancel', function(e) {
+            if (holdTimer) clearTimeout(holdTimer);
+          });
+        }
+
+        wrapper.appendChild(linha);
+      });
+
+      // ✅ Aplica a cor a fonte do título da categoria, se existir
+      if (cat.cor) {
+        titulo.style.color = cat.cor;        
+      }
+
+      bloco.appendChild(wrapper);
+      categoriasContainer.appendChild(bloco);
+
+      // Se estamos em modo edição com um token válido, aplica fade-in nas checkboxes
+      if (modoEdicao && fadeToken) {
+        // checkbox da categoria
+        const catCb = bloco.querySelector('.catSelecionado');
+        if (catCb && catCb.dataset.fadetoken !== String(fadeToken)) {
+          catCb.classList.add('fade-in');
+          catCb.dataset.fadetoken = String(fadeToken);
+          catCb.addEventListener('animationend', function() { catCb.classList.remove('fade-in'); }, { once: true });
+        }
+
+        // checkboxes dos itens
+        const itemCbs = bloco.querySelectorAll('.itemSelecionado');
+        itemCbs.forEach(cb => {
+          if (cb.dataset.fadetoken !== String(fadeToken)) {
+            cb.classList.add('fade-in');
+            cb.dataset.fadetoken = String(fadeToken);
+            cb.addEventListener('animationend', function() { cb.classList.remove('fade-in'); }, { once: true });
+          }
+        });
+      }
+    });
+
+    atualizarTotais();
+  }
+
+  categoriasContainer.addEventListener('input', function(e) {
+    const linha = e.target.closest('.item-linha');
+    const index = parseInt(e.target.getAttribute('data-index'));
+    if (!linha || isNaN(index) || !itens[index]) return;
+
+    const qtdInput = linha.querySelector('.quantidade');
+    const valorInput = linha.querySelector('.valorUnitario');
+
+    const qtd = parseFloat(qtdInput?.value) || 0;
+    const valor = parseFloat(valorInput?.value) || 0;
+
+    itens[index].qtd = qtd;
+    itens[index].valor = valor;   
+
+    salvarDados();
+    atualizarTotais();
+  });
+
+  function ajustarLarguraInput(input) {
+    input.style.width = 'auto';
+    input.style.width = (input.value.length + 1) + 'ch';
+  }
+
+  function atualizarTotais() {
+    let total = 0;
+    itens.forEach(item => {
+      total += (item.qtd * item.valor || 0);
+    });
+    valorTotalSpan.textContent = total.toFixed(2);
+  }
+
+  function removerSelecionados() {
+    // Remover itens selecionados
+    const itensSelecionados = document.querySelectorAll('.itemSelecionado:checked');
+    itensSelecionados.forEach(input => {
+      const index = parseInt(input.dataset.index);
+      if (!isNaN(index)) {
+        itens.splice(index, 1);
+      }
+    });
+
+    // Remover categorias selecionadas (com confirmação)
+    const categoriasSelecionadas = document.querySelectorAll('.catSelecionado:checked');
+    if (categoriasSelecionadas.length > 0) {
+      // Coletar nomes das categorias a serem deletadas
+      const nomesCategorias = Array.from(categoriasSelecionadas).map(input => input.dataset.categoria);
+      
+      // Se houver mais de uma, construir mensagem com todos os nomes; se apenas uma, mensagem singular
+      let mensagem;
+      if (nomesCategorias.length === 1) {
+        mensagem = `Tem certeza que deseja apagar toda a categoria "${nomesCategorias[0]}"?`;
+      } else {
+        mensagem = `Tem certeza que deseja apagar as seguintes categorias?\n\n${nomesCategorias.map(n => `• ${n}`).join('\n')}`;
+      }
+
+      // Pedir confirmação
+      const confirmacao = confirm(mensagem);
+      if (!confirmacao) return; // Cancelar operação
+    }
+
+    // Proceder com remoção das categorias
+    categoriasSelecionadas.forEach(input => {
+      const nome = input.dataset.categoria;
+      if (nome) {
+        categorias = categorias.filter(c => c.nome !== nome);
+        itens = itens.filter(i => i.categoria !== nome);
+      }
+    });
+
+    salvarDados();
+    atualizarInterface();
+  }
+
+  function ocultarSelecionados() {
+    // Atualiza os valores de quantidade no array `itens` antes de aplicar a lógica
+    ocultarSemQuantidade = true;
+    const camposQtd = document.querySelectorAll('.quantidade');
+    camposQtd.forEach(input => {
+      const index = input.dataset.index;
+      if (index !== undefined) {
+        itens[index].qtd = input.value.trim();
+      }
+    });
+
+    // Oculta os itens com quantidade vazia ou zero
+    itens.forEach(item => {
+      const qtd = item.qtd?.toString().trim();
+      item.oculto = !qtd || parseFloat(qtd) === 0;
+    });
+
+    // Oculta categorias selecionadas
+    const categoriasSelecionadas = document.querySelectorAll('.catSelecionado:checked');
+    categoriasSelecionadas.forEach(input => {
+      const nome = input.dataset.categoria;
+      const categoria = categorias.find(c => c.nome === nome);
+      if (categoria) {
+        categoria.oculto = true;
+      }
+    });
+
+    salvarDados();
+    atualizarInterface();
+  }
+
+  function mostrarOcultos() {
+    // Mostrar todos os itens ocultos
+    ocultarSemQuantidade = false;
+    itens.forEach(item => {
+      item.oculto = false;
+    });
+
+    // Mostrar todas as categorias ocultas
+    categorias.forEach(cat => {
+      cat.oculto = false;
+    });
+
+    salvarDados();
+    atualizarInterface();
+  }
+
+  function limparCamposNumericos() {
+    if (confirm('Deseja realmente apagar todas as quantidades e valores?')) {
+      itens.forEach(item => {
+        item.qtd = 0;
+        item.valor = 0;
+      });
+      salvarDados();
+      atualizarInterface();
+    }
+  }
+
+  let ocultosVisiveis = false;
+
+  function alternarOcultos() {
+    // Determina o estado atual de exibição de ocultos.
+    // Preferimos a indicação persistida em localStorage; se não existir,
+    // inferimos a partir dos dados (itens/categorias marcados como ocultos).
+    const stored = localStorage.getItem('ocultosVisiveis');
+    let atualmenteMostrandoOcultos;
+    if (stored === 'true' || stored === 'false') {
+      atualmenteMostrandoOcultos = stored === 'true';
+    } else {
+      // Se não há flag salva, inferimos: se houver algum item/categoria oculto,
+      // então atualmente os ocultos NÃO estão sendo mostrados (flag false).
+      const temItensOcultos = itens.some(it => it.oculto);
+      const temCategoriasOcultas = categorias.some(cat => cat.oculto);
+      atualmenteMostrandoOcultos = temItensOcultos || temCategoriasOcultas ? false : false;
+      // note: inferimos como 'false' porque se existem itens/categorias com .oculto=true,
+      // isso significa que eles estão atualmente ocultos (não mostrados).
+    }
+
+    // Novo estado será o inverso do que está efetivamente mostrado
+    const novoEstado = !atualmenteMostrandoOcultos;
+    ocultosVisiveis = novoEstado;
+
+    const botao = document.getElementById('botaoToggleOcultos');
+    // Exibe olho aberto quando os itens ocultos estão visíveis; macaco quando estão ocultos
+    botao.textContent = ocultosVisiveis ? '👁️' : '🙈';
+
+    // Salva o estado e executa a ação correspondente
+    localStorage.setItem('ocultosVisiveis', ocultosVisiveis ? 'true' : 'false');
+    if (ocultosVisiveis) {
+      mostrarOcultos();
+    } else {
+      ocultarSelecionados();
+    }
+
+    // Garante atualização imediata — re-render leve
+    setTimeout(() => atualizarInterface(), 20);
+  }   
+
+  function alternarModoEdicao() {
+    modoEdicao = !modoEdicao;
+    const botao = document.getElementById('botaoEditar');
+    botao.textContent = modoEdicao ? '⬅️' : '⚙️';
+
+    // Atualiza o ícone do botão submit conforme o modo: importação em modo edição, impressora em modo normal
+    const submitBtnEl = document.getElementById('submitBtn');
+    if (submitBtnEl) submitBtnEl.textContent = modoEdicao ? '📥' : '🖨️';
+
+    // Adiciona ou remove a classe no <body>
+    document.body.classList.toggle('modo-edicao', modoEdicao);
+    // atribui/limpa token para controlar animação única das checkboxes
+    if (modoEdicao) {
+      fadeToken = Date.now();
+    } else {
+      fadeToken = null;
+    }
+
+    // Aplica fade-in 
+    if (modoEdicao) {
+      const elementosComFade = [
+        document.getElementById('item'),
+        document.getElementById('novaCategoria'),        
+        //document.querySelector('form button') // botão "Adicionar"
+      ];
+
+      elementosComFade.forEach(el => {
+        if (el) el.classList.add('fade-in');
+      });
+
+    } else {
+        const elementos = document.querySelectorAll('.fade-in');
+        elementos.forEach(el => {
+          el.classList.remove('fade-in');
+        });
+      }
+
+    // Adiciona ou remove checkbox do total para permitir seleção da cor
+    try {
+      // Adiciona ou remove checkbox do título principal para permitir seleção da cor
+      const tituloEl = document.getElementById('tituloPrincipal');
+      if (tituloEl) {
+        if (modoEdicao) {
+          if (!tituloEl.querySelector('.tituloSelecionado')) {
+            const cbt = document.createElement('input');
+            cbt.type = 'checkbox';
+            cbt.className = 'tituloSelecionado';
+            cbt.title = 'Selecionar título para alterar cor';
+            cbt.style.marginRight = '8px';
+            if (fadeToken) {
+              cbt.classList.add('fade-in');
+              cbt.dataset.fadetoken = String(fadeToken);
+              cbt.addEventListener('animationend', function() { cbt.classList.remove('fade-in'); }, { once: true });
+            }
+            tituloEl.insertBefore(cbt, tituloEl.firstChild);
+          }
+        } else {
+          const existingT = tituloEl.querySelector('.tituloSelecionado');
+          if (existingT) existingT.remove();
+        }
+      }
+
+      const totalEl = document.querySelector('.total');
+      if (totalEl) {
+        if (modoEdicao) {
+          if (!totalEl.querySelector('.totalSelecionado')) {
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'totalSelecionado';
+            cb.title = 'Selecionar total para alterar cor';
+            cb.style.marginRight = '8px';
+            // Aplicar animação fade-in se houver token (mesma lógica das checkboxes de itens/categorias)
+            if (fadeToken) {
+              cb.classList.add('fade-in');
+              cb.dataset.fadetoken = String(fadeToken);
+              cb.addEventListener('animationend', function() { cb.classList.remove('fade-in'); }, { once: true });
+            }
+            totalEl.insertBefore(cb, totalEl.firstChild);
+          }
+        } else {
+          const existing = totalEl.querySelector('.totalSelecionado');
+          if (existing) existing.remove();
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    atualizarInterface();
+  }
+
+  document.body.classList.add('dark', 'modo-compacto');
+  carregarDados();
+
+  // Define o ícone inicial do botão submit conforme o modo atual (normal -> impressora, edição -> importação)
+  (function initSubmitIcon() {
+    const submitBtnEl = document.getElementById('submitBtn');
+    if (submitBtnEl) submitBtnEl.textContent = modoEdicao ? '📥' : '🖨️';
+  })();
+
+  categoriasContainer.addEventListener('click', function(e) {
+    if (e.target.classList.contains('toggleCategoria')) {
+      const nome = e.target.dataset.categoria;
+      const categoria = categorias.find(c => c.nome === nome);
+      if (!categoria) return;
+
+      const bloco = e.target.closest('.categoria-bloco');
+      const wrapper = bloco.querySelector('.tabela-wrapper');
+
+      if (categoria.colapsado) {
+        wrapper.style.height = '0px';
+        wrapper.style.overflow = 'hidden';
+        wrapper.style.transition = 'height 0.4s ease';
+        requestAnimationFrame(() => {
+          wrapper.style.height = `${wrapper.scrollHeight}px`;
+        });
+      } else {
+        wrapper.style.height = `${wrapper.scrollHeight}px`;
+        wrapper.style.overflow = 'hidden';
+        wrapper.style.transition = 'height 0.4s ease';
+        requestAnimationFrame(() => {
+          wrapper.style.height = '0px';
+        });
+      }
+
+      setTimeout(() => {
+        categoria.colapsado = !categoria.colapsado;
+        salvarDados();
+        atualizarInterface();
+      }, 400);
+    }
+  });
+
+  window.onload = function() {
+    carregarDados();
+    atualizarInterface();
+
+    if (ocultarSemQuantidade) {
+      ocultarSelecionados();
+    }
+  }
+  
+  // Função para abrir pop-up de exportação com botões "CSV" e "JSON"
+  function mostrarDialogoExportacao() {
+    // overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'export-modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'export-modal';
+    modal.innerHTML = `
+      <div class="export-modal-title">Escolha o formato de exportação</div>
+      <div class="export-modal-buttons">
+        <button id="exportCSVBtn">CSV</button>
+        <button id="exportJSONBtn">JSON</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const csvBtn = document.getElementById('exportCSVBtn');
+    const jsonBtn = document.getElementById('exportJSONBtn');
+
+    function cleanup() {
+      overlay.remove();
+    }
+
+    csvBtn.addEventListener('click', function() {
+      exportCSV();
+      cleanup();
+    });
+
+    jsonBtn.addEventListener('click', function() {
+      exportarLista();
+      cleanup();
+    });
+
+    // fechar ao clicar fora
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) cleanup();
+    });
+
+    // foco no primeiro botão para facilitar teclado
+    csvBtn.focus();
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', function () {
+    // Se estamos em modo de edição, abre o seletor de arquivo para importar
+    if (modoEdicao) {
+      document.getElementById('inputImportar').click();
+      return;
+    }
+    // Fora do modo de edição: mostra diálogo de exportação
+    mostrarDialogoExportacao();
+  });
+
+  // Mapear a tecla Enter/Next do teclado para executar a submissão do formulário (somente em modo edição)
+  (function mapKeyboardNextToSubmit() {
+    // Handler global para a tecla Enter em inputs dentro do form ou quantidade/valor
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter') return;
+      const ae = document.activeElement;
+      if (!(ae instanceof HTMLInputElement)) return;
+      
+      // Ignora inputs de edição inline (categoria/título)
+      if (ae.classList.contains('cat-nome-edit') || ae.classList.contains('no-submit')) return;
+      
+      // Se está dentro do form OU é um input de quantidade/valor
+      const inForm = ae.closest('#form');
+      const isQtdOrValor = ae.classList.contains('quantidade') || ae.classList.contains('valorUnitario');
+      
+      // Só executa se estiver em modo edição
+      if ((inForm || isQtdOrValor) && modoEdicao) {
+        e.preventDefault();
+        document.getElementById('form').requestSubmit();
+      }
+    });
+
+    // Adicionar enterkeyhint nos inputs do formulário para melhorar a UX do teclado
+    const itemInput = document.getElementById('item');
+    const novaCatInput = document.getElementById('novaCategoria');
+    [itemInput, novaCatInput].forEach(inp => {
+      if (!inp) return;
+      inp.setAttribute('enterkeyhint', 'next');
+    });
+  })();
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const temaSalvo = localStorage.getItem('temaSalvo');
+    const botaoTema = document.getElementById('botaoTema');
+    // O `botaoTema` pode não existir no markup; proteger para evitar exceção
+    if (botaoTema) {
+      if (temaSalvo === 'dark') {
+        document.body.classList.add('dark');
+        botaoTema.textContent = '☀️';
+      } else {
+        botaoTema.textContent = '🌙';
+      }
+    }
+
+    const botaoOcultos = document.getElementById('botaoToggleOcultos');
+    const valorSalvo = localStorage.getItem('ocultosVisiveis');
+    ocultosVisiveis = valorSalvo === 'true';
+    if (botaoOcultos) botaoOcultos.textContent = ocultosVisiveis ? '👁️' : '🙈';
+    // Aplica o estado salvo (ou inferido) imediatamente
+    if (ocultosVisiveis) {
+      mostrarOcultos();
+    } else {
+      ocultarSelecionados();
+    }
+  });
+
+
+  // --- Export helpers (CSV only) ---
+  function filteredExportItems() {
+    return itens.filter(it => {
+      const n = parseFloat(it.qtd);
+      return !isNaN(n) && n > 0;
+    });
+  }
+
+  function exportCSV() {
+    const dados = filteredExportItems();
+    const header = ['Nome','Quantidade','Valor Unitário','Valor Total'];
+    // Month/year header line (e.g., "Novembro/2025") — keep same number of columns
+    const mesesPTBR = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const hoje = new Date();
+    function capitalizeFirst(s) { return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+    const mesAno = `${capitalizeFirst(mesesPTBR[hoje.getMonth()])}/${hoje.getFullYear()}`;
+
+    // ✅ Função para escapar valores CSV e evitar injeção de fórmulas
+    function escapaCSVValue(value) {
+      let str = String(value).trim();
+      
+      // Se começa com caracteres perigosos (=, +, -, @), prefixar com '
+      // Isso previne que Excel/LibreOffice interpretem como fórmulas
+      if (/^[=+\-@]/.test(str)) {
+        str = "'" + str;
+      }
+      
+      // Escapar aspas duplas (duplicar para CSV)
+      str = str.replace(/"/g, '""');
+      
+      // Sempre envolver em aspas duplas para segurança
+      return '"' + str + '"';
+    }
+
+    // Format numbers for PT-BR: 2 decimals, decimal comma. Use semicolon as separator.
+    const lines = dados.map(d => {
+      const nome = d.nome || '';
+      const qtdNum = parseFloat(d.qtd);
+      const valorUnitNum = parseFloat(d.valor);
+      const hasQtd = !isNaN(qtdNum);
+      const hasValorUnit = !isNaN(valorUnitNum);
+      let qtdStr = '';
+      let unitStr = '';
+      let totalStr = '';
+      if (hasQtd) {
+        qtdStr = Number(qtdNum).toString().replace('.', ',');
+      }
+      if (hasValorUnit) {
+        unitStr = Number(valorUnitNum).toFixed(2).replace('.', ',');
+      }
+      if (hasQtd && hasValorUnit) {
+        const total = qtdNum * valorUnitNum;
+        totalStr = Number(total).toFixed(2).replace('.', ',');
+      }
+      // ✅ Usar escapaCSVValue para cada campo (protege contra injeção de fórmulas)
+      return [nome, qtdStr, unitStr, totalStr].map(escapaCSVValue).join(';');
+    });
+
+    // Prefix with UTF-8 BOM so Excel respects accents on Windows
+    // Date line uses 4 columns to match header
+    const dateLine = escapaCSVValue(mesAno) + ';' + escapaCSVValue('') + ';' + escapaCSVValue('') + ';';
+    const headerLine = header.map(escapaCSVValue).join(';');
+    const csv = '\uFEFF' + [dateLine, headerLine, ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lista_compras.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // Keep a simple helper to escape if needed (used in HTML generation elsewhere)
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // --- Exportar/Importar Lista ---
+  function exportarLista() {
+    const dados = {
+      categorias: categorias,
+      itens: itens,
+      titulo: document.getElementById('tituloPrincipal').textContent,
+      dataExportacao: new Date().toLocaleString('pt-BR')
+    };
+    const json = JSON.stringify(dados, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lista-compras-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    console.log('Lista exportada:', a.download);
+  }
+
+  // ✅ Validador rigoroso para JSON importado
+  function validarDadosImportados(dados) {
+    // 1. Validar estrutura básica
+    if (!dados || typeof dados !== 'object' || Array.isArray(dados)) {
+      throw new Error('Dados raiz deve ser um objeto JSON.');
+    }
+
+    // 2. Validar presença e tipo de categorias/itens
+    if (!Array.isArray(dados.categorias)) {
+      throw new Error('Campo "categorias" deve ser um array.');
+    }
+    if (!Array.isArray(dados.itens)) {
+      throw new Error('Campo "itens" deve ser um array.');
+    }
+
+    // 3. Lista de chaves perigosas (prototype pollution)
+    const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+
+    // 4. Validar cada categoria
+    dados.categorias.forEach((cat, idx) => {
+      if (!cat || typeof cat !== 'object' || Array.isArray(cat)) {
+        throw new Error(`Categoria [${idx}] deve ser um objeto.`);
+      }
+
+      // Rejeitar chaves perigosas
+      for (let key of dangerousKeys) {
+        if (key in cat) {
+          throw new Error(`Categoria [${idx}] contém chave perigosa: "${key}".`);
+        }
+      }
+
+      // Validar campos obrigatórios e tipos
+      if (typeof cat.nome !== 'string' || !cat.nome.trim()) {
+        throw new Error(`Categoria [${idx}]: "nome" deve ser uma string não-vazia.`);
+      }
+
+      // Validar campos opcionais (se presentes, devem ter tipos corretos)
+      if ('oculto' in cat && typeof cat.oculto !== 'boolean') {
+        throw new Error(`Categoria [${idx}]: "oculto" deve ser boolean.`);
+      }
+      if ('colapsado' in cat && typeof cat.colapsado !== 'boolean') {
+        throw new Error(`Categoria [${idx}]: "colapsado" deve ser boolean.`);
+      }
+      if ('cor' in cat && cat.cor !== null && typeof cat.cor !== 'string') {
+        throw new Error(`Categoria [${idx}]: "cor" deve ser uma string ou null.`);
+      }
+
+      // Sanitizar: garantir que campos opcionais têm valores seguros
+      cat.oculto = Boolean(cat.oculto || false);
+      cat.colapsado = Boolean(cat.colapsado || false);
+      cat.cor = cat.cor && typeof cat.cor === 'string' ? cat.cor.trim() : '';
+    });
+
+    // 5. Validar cada item
+    dados.itens.forEach((item, idx) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        throw new Error(`Item [${idx}] deve ser um objeto.`);
+      }
+
+      // Rejeitar chaves perigosas
+      for (let key of dangerousKeys) {
+        if (key in item) {
+          throw new Error(`Item [${idx}] contém chave perigosa: "${key}".`);
+        }
+      }
+
+      // Validar campos obrigatórios
+      if (typeof item.nome !== 'string' || !item.nome.trim()) {
+        throw new Error(`Item [${idx}]: "nome" deve ser uma string não-vazia.`);
+      }
+      if (typeof item.categoria !== 'string' || !item.categoria.trim()) {
+        throw new Error(`Item [${idx}]: "categoria" deve ser uma string não-vazia.`);
+      }
+
+      // Validar categoria existe
+      const catExiste = dados.categorias.some(c => c.nome === item.categoria);
+      if (!catExiste) {
+        throw new Error(`Item [${idx}]: categoria "${item.categoria}" não existe em categorias.`);
+      }
+
+      // Validar campos numéricos opcionais
+      if ('qtd' in item) {
+        const qtdNum = parseFloat(item.qtd);
+        if (isNaN(qtdNum) && item.qtd !== 0 && item.qtd !== '') {
+          throw new Error(`Item [${idx}]: "qtd" deve ser um número válido.`);
+        }
+        item.qtd = isNaN(qtdNum) ? 0 : qtdNum;
+      } else {
+        item.qtd = 0;
+      }
+
+      if ('valor' in item) {
+        const valorNum = parseFloat(item.valor);
+        if (isNaN(valorNum) && item.valor !== 0 && item.valor !== '') {
+          throw new Error(`Item [${idx}]: "valor" deve ser um número válido.`);
+        }
+        item.valor = isNaN(valorNum) ? 0 : valorNum;
+      } else {
+        item.valor = 0;
+      }
+
+      // Validar booleanos opcionais
+      if ('oculto' in item && typeof item.oculto !== 'boolean') {
+        throw new Error(`Item [${idx}]: "oculto" deve ser boolean.`);
+      }
+      item.oculto = Boolean(item.oculto || false);
+    });
+
+    // 6. Validar título (opcional)
+    if ('titulo' in dados && typeof dados.titulo !== 'string') {
+      throw new Error('Campo "titulo" deve ser uma string.');
+    }
+
+    return true;
+  }
+
+  function importarLista(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const dados = JSON.parse(e.target.result);
+        
+        // ✅ Validação rigorosa dos dados importados
+        validarDadosImportados(dados);
+
+        // Confirmar sobrescrita
+        if (itens.length > 0 || categorias.length > 0) {
+          const confirmacao = confirm(
+            'Isso substituirá sua lista atual. Deseja continuar?\n\n' +
+            'Dica: Exporte sua lista atual antes para não perder dados.'
+          );
+          if (!confirmacao) return;
+        }
+
+        // ✅ Carregar dados (agora validados e sanitizados)
+        categorias = dados.categorias || [];
+        itens = dados.itens || [];
+        if (dados.titulo) {
+          document.getElementById('tituloPrincipal').textContent = dados.titulo;
+          localStorage.setItem('comprasTitulo', dados.titulo);
+        }
+
+        salvarDados();
+        atualizarInterface();
+        alert('✓ Lista importada com sucesso!');
+        console.log('Lista importada:', dados);
+      } catch (err) {
+        alert('Erro ao importar arquivo:\n\n' + err.message);
+        console.error('Erro ao importar:', err);
+      }
+    };
+    reader.readAsText(file);
+    
+    // Limpar input para permitir selecionar o mesmo arquivo novamente
+    event.target.value = '';
+  }
+
+  // --- Suporte: arrastar o elemento 'total' após toque longo ---
+  (function initTotalDrag() {
+    const totalEl = document.querySelector('.total');
+    if (!totalEl) return;
+    const storageKey = 'comprasTotalPos';
+
+    // Aplicar posição salva, se existir
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (typeof p.left === 'number' && typeof p.top === 'number') {
+          totalEl.style.left = p.left + 'px';
+          totalEl.style.top = p.top + 'px';
+          totalEl.style.right = 'auto';
+          totalEl.style.bottom = 'auto';
+        }
+      }
+    } catch (e) { /* ignorar erro de parse */ }
+
+    let pressTimer = null;
+    let dragging = false;
+    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+    let activePointerId = null;
+
+    // Evita comportamento padrão (panning) enquanto arrasta
+    totalEl.style.touchAction = 'none';
+
+    totalEl.addEventListener('pointerdown', function(e) {
+      if (e.button && e.button !== 0) return;
+      activePointerId = e.pointerId;
+      pressTimer = setTimeout(() => {
+        dragging = true;
+        try { totalEl.setPointerCapture(activePointerId); } catch(_) {}
+        const rect = totalEl.getBoundingClientRect();
+        origLeft = rect.left;
+        origTop = rect.top;
+        startX = e.clientX;
+        startY = e.clientY;
+        totalEl.style.left = origLeft + 'px';
+        totalEl.style.top = origTop + 'px';
+        totalEl.style.right = 'auto';
+        totalEl.style.bottom = 'auto';
+        totalEl.style.transition = 'none';
+      }, 100);
+    });
+
+    totalEl.addEventListener('pointermove', function(e) {
+      if (!dragging || e.pointerId !== activePointerId) return;
+      e.preventDefault();
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      let newLeft = origLeft + dx;
+      let newTop = origTop + dy;
+      const pad = 8;
+      const maxLeft = window.innerWidth - totalEl.offsetWidth - pad;
+      const maxTop = window.innerHeight - totalEl.offsetHeight - pad;
+      if (newLeft < pad) newLeft = pad;
+      if (newTop < pad) newTop = pad;
+      if (newLeft > maxLeft) newLeft = maxLeft;
+      if (newTop > maxTop) newTop = maxTop;
+      totalEl.style.left = newLeft + 'px';
+      totalEl.style.top = newTop + 'px';
+    });
+
+    function endDrag(e) {
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+      if (dragging && e && e.pointerId && e.pointerId === activePointerId) {
+        try { totalEl.releasePointerCapture(activePointerId); } catch(_) {}
+        dragging = false;
+        activePointerId = null;
+        totalEl.style.transition = '';
+        const left = parseInt(totalEl.style.left, 10);
+        const top = parseInt(totalEl.style.top, 10);
+        if (!isNaN(left) && !isNaN(top)) {
+          localStorage.setItem(storageKey, JSON.stringify({ left, top }));
+        }
+      }
+    }
+
+    totalEl.addEventListener('pointerup', endDrag);
+    totalEl.addEventListener('pointercancel', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    window.addEventListener('blur', function() { if (pressTimer) clearTimeout(pressTimer); if (dragging) dragging = false; });
+
+    // Se soltar antes do long-press, apenas limpa o timer
+    totalEl.addEventListener('pointerup', function(e) {
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    });
+  })();
+
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(function(reg) { console.log('Service Worker registrado:', reg.scope); })
+          .catch(function(err) { console.warn('Falha ao registrar Service Worker:', err); });
+      });
+    }
+  </script>
+</body>
+</html>
