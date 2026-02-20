@@ -262,13 +262,30 @@
     /* Responsivo para telas até 400px */    
     @media (max-width: 400px) {
       .item-linha {
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: nowrap;
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .item-linha input[type="number"],
+      .item-linha input[type="text"] {
+        min-width: 40px;
+        max-width: 60px;
+        padding: 2px;
+        font-size: 12px;
+      }
+
+      .item-nome {
+        margin-left: 8px;
+        font-size: 14px;
       }
 
       .item-centro {
-        justify-content: space-around;
-      }      
+        justify-content: flex-end;
+        gap: 4px;
+        flex-shrink: 0;
+        min-width: auto;
+      }
     }
     /* Export modal styles */
     .export-modal-overlay {
@@ -332,8 +349,8 @@
   <div id="espaço">espaço</div>
   
   <form id="form">
-    <input type="text" id="item" placeholder="Novo Item">
     <input type="text" id="novaCategoria" placeholder="Nova Categoria">
+    <input type="text" id="item" placeholder="Novo Item">    
   </form>
 
   <!-- Hidden file input for importing list -->
