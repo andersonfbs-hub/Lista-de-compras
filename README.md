@@ -5,6 +5,6 @@ cores customizáveis e suporte offline.
 
 ## Como usar
 
-1. Acesse: https://seu-usuario.github.io/lista-de-compras/
+1. Acesse: https://andersonfbs-hub.github.io/Lista-de-compras/
 2. Instale no seu celular (iOS: compartilhar → Adicionar à Tela Principal; Android: menu → Instalar)
 3. Use offline!
